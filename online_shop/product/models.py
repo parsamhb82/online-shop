@@ -13,13 +13,14 @@ class Category(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)
     description = models.TextField(null=False, blank=False)
-    price = models.DecimalField(max_digits=10, decimal_places=2, blank=False, null=False)
+    price = models.DecimalField(max_digits=20, decimal_places=2, blank=False, null=False)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    stock = models.IntegerField(blank=False, null=False)
     def __str__(self) -> str:
         return self.name
     
 class Comment(models.Model):
-    comment = models.TextField(null=False, blank=False)
+    comment_text = models.TextField(null=False, blank=False)
     costumer = models.ForeignKey(Costumer, on_delete=models.CASCADE,blank=False, null=False)
     product = models.ForeignKey(Product, on_delete=models.CASCADE,blank=False, null=False)
 

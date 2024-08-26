@@ -9,6 +9,7 @@ class Costumer(models.Model):
     address = models.TextField(null=True, blank=True)
     city = models.CharField(max_length=100, null=True, blank=True)
     phone_number = models.CharField(max_length=100, null=False, blank=False, unique=True)
+    wallet = models.IntegerField(default= 0, blank=False, null= False)
 
     def __str__(self) -> str:
         return f"{self.name} {self.last_name}"
