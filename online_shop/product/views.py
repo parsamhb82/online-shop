@@ -85,7 +85,7 @@ def add_rate(request):
             return JsonResponse({'message' : 'product does not exist'}, safe=False)
     else:
         return JsonResponse({'message' : 'please send a POST request'}, safe=False)
-
+@csrf_exempt
 def add_product(request):
     if request.method == "POST":
         
