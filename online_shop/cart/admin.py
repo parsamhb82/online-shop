@@ -1,3 +1,10 @@
-from django.contrib import admin
+from django.contrib.admin import register, ModelAdmin
+from cart.models import Cart
 
-# Register your models here.
+@register(Cart)
+class CartAdmin(ModelAdmin):
+    list_display = [
+        'code',
+        'costumer',
+        'is_finalized'
+    ]
