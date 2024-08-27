@@ -110,6 +110,18 @@ def add_product(request):
         return JsonResponse({'message' : 'please send a POST request'}, safe=False)
     
 
-
+def get_product(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+        product_dict = {
+            'name' : product.name,
+            'price' : product.price,
+            'category' : product.category.name,
+            'description' : product.description,
+        'stock' : product.stock,
+        }
+        return JsonResponse(product_dict, safe=False)
+    except Product.DoesNotExist:
+        return JsonResponse({'message' : 'product does not exist'}, safe=False)
 
 
