@@ -12,7 +12,7 @@ def costumers(request):
     costumers_list = []
     for costumer in costumers_:
         costumer_dict = {
-            "first_name": costumer.name,
+            "name": costumer.name,
             "last_name": costumer.last_name,
             "email": costumer.email,
             "phone_number": costumer.phone_number,
@@ -79,13 +79,15 @@ def add_costumer(request):
         
     else :
         return JsonResponse({'error' : 'invalid request method'}, status = 405)
-    
+@csrf_exempt    
 def add_money_to_wallet(request):
     if request.method == 'POST':
         try:
             body = json.loads(request.body)
             costumer_id = body['costumer_id']
             added_money = body['added_money']
+            if not isinstance(added_money, (int, float)) or added_money <= 0:
+                return JsonResponse({'error': 'Invalid amount. It should be a positive number.'}, status=400)
             costumer = Costumer.objects.get(id=costumer_id)
             costumer.wallet += added_money
             costumer.save()
