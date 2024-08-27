@@ -86,7 +86,7 @@ def add_money_to_wallet(request):
             body = json.loads(request.body)
             costumer_id = body['costumer_id']
             added_money = body['added_money']
-            if not isinstance(added_money, (int, float)) or added_money <= 0:
+            if added_money <= 0:
                 return JsonResponse({'error': 'Invalid amount. It should be a positive number.'}, status=400)
             costumer = Costumer.objects.get(id=costumer_id)
             costumer.wallet += added_money
@@ -100,6 +100,69 @@ def add_money_to_wallet(request):
             return JsonResponse({'error': str(e)}, status=400)
     else:
         return JsonResponse({'error' : 'invalid request method'}, status = 405)
+
+@csrf_exempt
+def update_costumer(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            costumer_id = data['costumer_id']
+            costumer =  Costumer.objects.get(id=costumer_id)
+            
+            costumer.name = data.get('name', costumer.name)
+            costumer.last_name = data.get('last_name', costumer.last_name)
+            costumer.email = data.get('email', costumer.email)
+            costumer.phone_number = data.get('phone_number', costumer.phone_number)
+            costumer.city = data.get('city', costumer.city)
+            costumer.address = data.get('address', costumer.address)
+            costumer.save()
+
+            return JsonResponse({'message': 'Customer updated successfully'}, status=200)
+        except KeyError as e:
+            return JsonResponse({'error': f'Missing required field: {str(e)}'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def get_costumer(request, costumer_id):
+    try:
+        costumer = Costumer.objects.get(id=costumer_id)
+        costumer_dict = {
+            "first_name": costumer.name,
+            "last_name": costumer.last_name,
+            "email": costumer.email,
+            "phone_number": costumer.phone_number,
+            "city": costumer.city,
+            "address": costumer.address
+        }
+        return JsonResponse(costumer_dict, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+@csrf_exempt
+def reset_password(request):
+    if request.method == 'POST':
+        try:
+            body = json.loads(request.body)
+            email = body['email']
+            new_password = body['new_password']
+
+            costumer = Costumer.objects.get(email=email)
+            costumer.password = make_password(new_password)
+            costumer.save()
+
+            return JsonResponse({'message': 'Password reset successfully'}, status=200)
+        except KeyError as e:
+            return JsonResponse({'error': f'Missing required field: {str(e)}'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
     
