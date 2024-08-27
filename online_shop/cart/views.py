@@ -9,14 +9,15 @@ from django.db import IntegrityError
 from order.models import Order, Discount
 import uuid
 from django.db.models import Sum
+@csrf_exempt
 def add_product_to_cart(request):
-    if request.body == "POST":
+    if request.method == "POST":
         try:
             data = json.loads(request.body)
             costumer = Costumer.objects.get(username=data['costumer_username'])
             cart = Cart.objects.get(costumer = costumer, is_finalized = False)
             product = Product.objects.get(id = data['product_id'])
-            cart.prodcuts.add(product)
+            cart.products.add(product)
             cart.save()
             return JsonResponse({"success": "Product added to cart"})
         except Costumer.DoesNotExist:
@@ -33,8 +34,9 @@ def add_product_to_cart(request):
 
     return JsonResponse({"error": "request must be post"})
 
+@csrf_exempt
 def remove_product_from_cart(request):
-    if request.body == "POST":
+    if request.method == "POST":
         try:
             data = json.loads(request.body)
             costumer = Costumer.objects.get(username=data['costumer_username'])
@@ -42,7 +44,7 @@ def remove_product_from_cart(request):
             product = Product.objects.get(id = data['product_id'])
             if product not in cart.products.all():
                 return JsonResponse({'error': 'Product not found in cart'}, status=400)
-            cart.prodcuts.remove(product)
+            cart.products.remove(product)
             cart.save()
             return JsonResponse({"success": "Product removed from cart"})
         except json.JSONDecodeError:
@@ -75,13 +77,15 @@ def generate_unique_cart_code():
             return code
 
 
-    
+@csrf_exempt  
 def finalize_cart(request):
-    if request.body == "POST":
+    if request.method == "POST":
         try:
             data = json.loads(request.body)
             costumer = Costumer.objects.get(username=data['costumer_username'])
             cart = Cart.objects.get(costumer = costumer, is_finalized = False)
+            if not cart.products.exists():
+                return JsonResponse({"error": "Cart is empty, cannot finalize"}, status=400)
             cart.is_finalized = True
             cart.save()
             order = Order.objects.create(
@@ -90,7 +94,7 @@ def finalize_cart(request):
                 cart=cart,
                 is_received=False 
             )
-            order.products.set(cart.prodcuts.all())
+            order.products.set(cart.products.all())
             order.save()
             new_cart = Cart.objects.create(
                 code=generate_unique_cart_code(),  # Assuming a function to generate a unique cart code
@@ -116,15 +120,15 @@ def finalize_cart(request):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
-    
+@csrf_exempt   
 def view_active_cart(request, costumer_username):
     try:
         costumer = Costumer.objects.get(username=costumer_username)
         cart = Cart.objects.get(costumer = costumer, is_finalized = False)
-        total_price = cart.prodcuts.aggregate(total=Sum('price'))['total'] or 0
+        total_price = cart.products.aggregate(total=Sum('price'))['total'] or 0
         
         return JsonResponse({
-                            "products": cart.prodcuts.values('name'),
+                            "products": cart.products.values('name'),
                             "bill" : total_price
                              },status=200)
     except Cart.DoesNotExist:
